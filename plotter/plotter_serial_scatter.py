@@ -4,8 +4,37 @@ import time
 import matplotlib.pyplot as plt
 import serial
 
+def make_client(url, apikey):
+     """Creates and returns an instance of the OctoRest client.
+
+     Args:
+         url - the url to the OctoPrint server
+         apikey - the apikey from the OctoPrint server found in settings
+     """
+     try:
+         client = OctoRest(url='http://192.168.1.100:8441', apikey='DABF5FAE5B7348BA9ED5E159BC93FD83')
+         return client
+     except ConnectionError as ex:
+         # Handle exception as you wish
+         print(ex)
+
+def file_names(client):
+     """Retrieves the G-code file names from the
+     OctoPrint server and returns a string message listing the
+     file names.
+
+     Args:
+         client - the OctoRest client
+     """
+     message = "The GCODE files currently on the printer are:\n\n"
+     for k in client.files()['files']:
+         message += k['name'] + "\n"
+     print(message)
+
+
+
 # init serial - source for the data
-SERIAL_PORT = '/dev/tty.usbmodem14201'  # path to serial output on Mac
+SERIAL_PORT = 'COM3'  # path to serial output on Mac
 SERIAL_RATE = 9600
 ser = serial.Serial(SERIAL_PORT, SERIAL_RATE)
 
@@ -50,7 +79,7 @@ while True:
     distance_to_previous = math.sqrt(math.pow(x - last_x, 2) + math.pow(y - last_y, 2) + math.pow(z - last_z, 2))
 
     # if last point was too close, don't plot it
-    if distance_to_previous > 0.75:
+    if distance_to_previous > 0.15:
         xs.append(x)
         ys.append(y)
         zs.append(z)
@@ -68,7 +97,8 @@ while True:
     # draw when we have 2 points, too frequent draws cause lags
     if new_points_count > 1:
         ax.cla()
-        ax.scatter(xs, ys, zs, c=cs, cmap='cool')
+        #ax.scatter(xs, ys, zs, c=cs, cmap='cool')
+        ax.plot(xs, ys, zs, 'bo-', linewidth=2, markersize=5)
         new_points_count = 0
 
     plt.draw()
